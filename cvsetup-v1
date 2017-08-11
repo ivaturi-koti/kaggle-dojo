@@ -1,0 +1,56 @@
+library(lattice)
+library(ggplot2)
+library(randomForest)
+library(caret)
+
+#Set up of the performance metric to RMSLE
+  myRMSLE <- function (data, lev = NULL, model = NULL) 
+  {
+    if (is.character(data$obs)) 
+      data$obs <- factor(data$obs, levels = lev)
+    mypostResample<-function(pred,obs)
+
+    {
+      isNA <- is.na(pred)
+      pred <- pred[!isNA]
+      obs <- obs[!isNA]
+
+      msle <- mean((log(pred+1) - log(obs+1))^2)
+      out <- sqrt(msle)
+      names(out) <- c("RMSLE")
+
+      if (any(is.nan(out))) 
+        out[is.nan(out)] <- NA
+      out
+    }
+    mypostResample(data[, "pred"], data[, "obs"])
+
+  }
+
+#Reading in training and test data
+  taxi_train<-read.csv("train.csv")
+  taxi_test<-read.csv("test.csv")
+
+#Data exploration and Visualization
+
+
+#Feature Engineering
+
+
+#Set up multifold cross validation with RMSLE as the perfromance metric
+  caret.control<-trainControl(method = "repeatedcv", number=10, repeats=3, summaryFunction = myRMSLE)
+
+#Model fit
+  taxi.model<-train(trip_duration ~., data=taxi_data, method="lm", trControl=caret.control, tuneLength=7, metric="RMSLE")
+
+
+
+
+
+
+
+
+
+
+
+
