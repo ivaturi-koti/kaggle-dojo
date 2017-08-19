@@ -1,0 +1,154 @@
+
+#Reading in training and test data
+taxi_train<-read.csv("train 2.csv")
+taxi_test<-read.csv("test.csv")
+
+
+#Feature Engineering
+#Create new features from the DateTimeStamp
+
+#For pickup - Splitting this feature into pickup_month, day of month, hour of day, minute of hour, and seasons.
+  pickup<-taxi_train$pickup_datetime
+   pickup<-as.character(pickup)
+    pickup<-gsub("-", " ", pickup)
+    pickup<-gsub(":", " ", pickup)
+    pickup<-strsplit(pickup, " ")
+    pickup<-as.data.frame(pickup)
+    colnames(pickup)<-"pickup"
+    pickup<-as.data.frame(t(pickup))
+    taxi_train<-cbind(taxi_train, pickup)
+    taxi_train<-taxi_train[,-12]
+  
+  taxi_train$V2<-gsub("03", "March", taxi_train$V2)
+  taxi_train$V2<-gsub("01", "January", taxi_train$V2)
+  taxi_train$V2<-gsub("02", "February", taxi_train$V2)
+  taxi_train$V2<-gsub("04", "April", taxi_train$V2)
+  taxi_train$V2<-gsub("05", "May", taxi_train$V2)
+  taxi_train$V2<-gsub("06", "June", taxi_train$V2)
+  taxi_train$V2<-gsub("07", "July", taxi_train$V2)
+  taxi_train$V2<-gsub("08", "August", taxi_train$V2)
+  taxi_train$V2<-gsub("09", "September", taxi_train$V2)
+  taxi_train$V2<-gsub("10", "October", taxi_train$V2)
+  taxi_train$V2<-gsub("11", "November", taxi_train$V2)
+  taxi_train$V2<-gsub("12", "December", taxi_train$V2)
+  
+  taxi_train$V2<-as.factor(taxi_train$V2)
+    taxi_train$pickup_month<-taxi_train$V2
+    taxi_train$pickup_dayOfMonth<-taxi_train$V3
+    taxi_train$pickup_hourOfDay<-taxi_train$V4
+    taxi_train$pickup_minuteOfHour<-taxi_train$V5
+    
+    taxi_train<-taxi_train[,-c(12:16)] 
+    
+
+
+#For drop_off- Splitting this feature into pickup_month, day of month, hour of day, minute of hour, and seasons.
+  dropoff<-taxi_train$dropoff_datetime
+  
+  dropoff<-as.character(dropoff)
+  dropoff<-gsub("-", " ", dropoff)
+  dropoff<-gsub(":", " ", dropoff)
+  dropoff<-strsplit(dropoff, " ")
+  dropoff<-as.data.frame(dropoff)
+  
+  colnames(dropoff)<-"dropoff"
+  dropoff<-as.data.frame(t(dropoff))
+  
+  taxi_train<-cbind(taxi_train, dropoff)
+  taxi_train<-taxi_train[, -16]
+  
+  taxi_train$V2<-gsub("03", "March", taxi_train$V2)
+  taxi_train$V2<-gsub("01", "January", taxi_train$V2)
+  taxi_train$V2<-gsub("02", "February", taxi_train$V2)
+  taxi_train$V2<-gsub("04", "April", taxi_train$V2)
+  taxi_train$V2<-gsub("05", "May", taxi_train$V2)
+  taxi_train$V2<-gsub("06", "June", taxi_train$V2)
+  taxi_train$V2<-gsub("07", "July", taxi_train$V2)
+  taxi_train$V2<-gsub("08", "August", taxi_train$V2)
+  taxi_train$V2<-gsub("09", "September", taxi_train$V2)
+  taxi_train$V2<-gsub("10", "October", taxi_train$V2)
+  taxi_train$V2<-gsub("11", "November", taxi_train$V2)
+  taxi_train$V2<-gsub("12", "December", taxi_train$V2)
+  
+  taxi_train$V2<-as.factor(taxi_train$V2)
+  taxi_train$dropoff_month<-taxi_train$V2
+  taxi_train$dropoff_dayOfMonth<-taxi_train$V3
+  taxi_train$dropoff_HourOfDay<-taxi_train$V4
+  taxi_train$dropoff_minuteOfHour<-taxi_train$V5
+  taxi_train<-taxi_train[,-c(16:20)] 
+  
+  
+#Create a new factor feature - Seasons of the year
+  
+  taxi_train$Season<-gsub("March|April|May", "Spring", taxi_train$dropoff_month)
+  taxi_train$Season<-gsub("June|July|August", "Summer", taxi_train$Season)
+  taxi_train$Season<-gsub("September|October|November", "Fall", taxi_train$Season)
+  taxi_train$Season<-gsub("December|January|February", "Winter", taxi_train$Season)
+  
+  
+ #Create distance and optimal time to travel between two sets of lat/long (incomplete)
+ 
+ #use ggmap
+ library(ggmap)
+
+#Token calculation for one record
+  from<-c(-73.98215, 40.76794)
+  to<-c(-73.96463, 40.76560)
+  dist<-mapdist(from, to, mode="driving")
+  
+  #Tried to write a function for this but did not succeed.
+   
+
+ df<-list()
+for(i in nrow(dist_matrix)){
+  from<-c(plong[i], plat[i])
+  to<-c(dlong[i], dlat[i])
+  lapply()
+  
+}
+  df.data<-as.data.frame(do.call("rbind", df))
+
+#using the geoshpere package.  
+#Does not work
+taxi_train[, distance := distHaversine(c(pickup_longitude, pickup_latitude), c(dropoff_longitude, dropoff_latitude))] 
+ taxi_train[, distance == distHaversine(matrix(c(pickup_longitude, pickup_latitude), ncol = 2),
+                                 matrix(c(dropoff_longitude, dropoff_latitude), ncol = 2))]
+
+#Does not throw an error but seems to take a lot of time and crashes
+  list1<-select(taxi_train, pickup_longitude, pickup_latitude)
+  list2<-select(taxi_train, dropoff_longitude, dropoff_latitude)
+  #tax_train$distance<-distVincentyEllipsoid(taxi_train[,c(pickup_longitude,pickup_latitude)], taxi_train[,c(dropoff_longitude,dropoff_latitude)])
+ 
+  mat <- distm(list1[,c('pickup_longitude','pickup_latitude')], list2[,c('dropoff_longitude','dropoff_latitude')], fun=distVincentyEllipsoid)
+  
+ 
+  
+
+  
+  #Data exploration and Visualization
+  #Normalize coloumns 
+  normalize<-function(x){
+    return((x-min(x))/(max(x)-min(x)))
+  }
+  
+  distance_train<-as.data.frame(lapply(c(taxi_train$pickup_longitutde, taxi_train$pickup_latitude), c(taxi_train$dropoff_longitude, taxi_train$dropoff_latitude), distance_train))
+  
+  
+  pickup_coord<-function(a,b){
+    c(a,b)
+  }
+
+  lapply(taxi_train$pickuplongitude, taxi_train$pickup_latitude, pickup_coord)
+  ?lapply
+  taxi_train$trip_duration_norm<-as.data.frame(lapply(taxi_train["trip_duration"], normalize))
+taxi_train$pickup_hourOfDay_norm<-as.data.frame(lapply(taxi_train["pickup_hourOfDay"], normalize))
+taxi_train$pickup_hourOfDay<-as.numeric(taxi_train$pickup_hourOfDay)
+str(taxi_train$pickup_hourOfDay)
+
+xyplot(
+  trip_duration ~
+    pickup_hourOfDay, 
+  data=taxi_train,
+  groups=pickup_month,
+  auto.key=TRUE
+)
