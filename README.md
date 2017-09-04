@@ -1,2 +1,2 @@
 # kaggle-dojo
-codeshare space for the kaggle competition
+Codeshare space for the kaggle competition - NYC taxi trip duration prediction
